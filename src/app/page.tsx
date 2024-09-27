@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   useAccount,
@@ -11,9 +11,23 @@ import {
 import { parseEther } from "viem";
 import { toast } from "sonner";
 import { useWeb3Modal } from "@web3modal/wagmi/react";
+import PhotoGrid from "@/components/PhotoGrid";
 
 export default function Home() {
-  const { isConnected } = useAccount();
+  const photosArray = [
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
+  ];
+  const [blocktones, setBlocktones] = useState<
+    Array<{ tokenId: string; video: string }>
+  >([]);
+
+  const { isConnected, address } = useAccount();
   const { signMessage } = useSignMessage();
   const { sendTransaction, data: hash } = useSendTransaction();
   const { open } = useWeb3Modal();
@@ -29,6 +43,14 @@ export default function Home() {
   });
 
   useEffect(() => {
+    if (blocktones && blocktones.length > 0) {
+      blocktones.forEach((nft) => {
+        console.log(`Token ID: ${nft.tokenId}`);
+        console.log(`Video URL: ${nft.video}`);
+      });
+    } else {
+      console.log("No blocktones data available.");
+    }
     if (isConfirming) {
       toast.loading("Transaction Pending");
     }
@@ -47,45 +69,52 @@ export default function Home() {
     if (error) {
       toast.error("Transaction Failed");
     }
-  }, [isConfirming, isConfirmed, error, hash]);
+  }, [isConfirming, isConfirmed, error, hash, blocktones]);
+
+  async function handleApi() {
+    try {
+      const response = await fetch("/api/fetchBlocks", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ data: { address } }), // ensure address is correctly defined elsewhere in your code
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send request");
+      }
+
+      const result = await response.json();
+
+      if (result.tokenIds && Array.isArray(result.tokenIds)) {
+        // Set the blocktones state with the retrieved tokenIds
+        setBlocktones(result.tokenIds); // result.tokenIds is an array of { tokenId, video } objects
+        console.log("Result: ", result.tokenIds);
+      } else {
+        console.log("No token IDs found.");
+      }
+    } catch (error) {
+      console.error("Error sending request:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (isConnected) {
+      handleApi();
+    }
+  }, [isConnected]);
 
   return (
-    <main>
-      <section className="py-12 flex flex-col items-center text-center gap-8">
-        <h1 className="text-4xl font-bold">Web3 Starter Kit</h1>
-        <p className="text-2xl text-muted-foreground">
-          Build your dapp frontends with the latest tools.
-        </p>
-      </section>
-      <div className="flex gap-6 items-center justify-center">
+    <main className="">
+      <div className="flex justify-center gap-6 border-2 border-red-500 items-center min-h-screen">
         {!isConnected ? (
-          <Button onClick={handleConnect}>Connect Wallet</Button>
+          <h1 className="md:text-2xl">Connect your wallet to display your NFTs!</h1>
         ) : (
-          <>
-            <Button onClick={handleConnect}>Info</Button>
-            <Button onClick={() => signMessage({ message: "gm" })}>
-              {" "}
-              Say GM{" "}
-            </Button>
-            <Button
-              onClick={() =>
-                sendTransaction({
-                  to: "0x1a343eFB966E63bfA25A2b368455448f02466Ffc",
-                  value: parseEther("0.1"),
-                })
-              }
-              disabled={isConfirming}
-              variant={"secondary"}
-            >
-              Tip .1 Eth
-            </Button>
-          </>
+          <div className="flex mt-4 md:ml-6">
+            <PhotoGrid blocktones={blocktones} rowLimit={5} />
+          </div>
         )}
-      </div>
-      <div className="flex mt-10 items-center justify-center">
-        <Link href="/counter">
-          <Button className="w-60">Counter</Button>
-        </Link>
       </div>
     </main>
   );

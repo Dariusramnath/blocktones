@@ -39,7 +39,7 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <div id="root" className="p-24">
+        <div id="root" className="pt-2">
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
