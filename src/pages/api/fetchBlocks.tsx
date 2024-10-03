@@ -49,8 +49,8 @@ async function getNftTokenIdsForProject(
           video: nft.image?.cachedUrl || 'No media available', // Use media first, fallback to image if available
         }));
       
-        const images = nfts.ownedNfts.map((nft) => nft.image.cachedUrl);
-        console.log(nfts)
+        // const images = nfts.ownedNfts.map((nft) => nft.image.cachedUrl);
+        // console.log(nfts)
         return data
     } else {
         console.log('No NFTs found for the given address.');

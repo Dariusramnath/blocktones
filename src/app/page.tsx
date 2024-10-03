@@ -107,9 +107,9 @@ export default function Home() {
 
   return (
     <main className="">
-      <div className="flex justify-center gap-6 border-2 border-red-500 items-center min-h-screen">
+      <div className="flex justify-center gap-6 border-2 border-red-500 items-center">
         {!isConnected ? (
-          <h1 className="md:text-2xl">Connect your wallet to display your NFTs!</h1>
+          <h1 className="flex md:text-2xl min-h-screen items-center">Connect your wallet to display your NFTs!</h1>
         ) : (
           <div className="flex mt-4 md:ml-6">
             <PhotoGrid blocktones={blocktones} rowLimit={5} />
