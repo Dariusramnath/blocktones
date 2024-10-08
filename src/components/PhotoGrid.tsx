@@ -2,6 +2,16 @@ import React from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
+type Attribute = {
+  trait_type: string;
+  value: string;
+};
+
+type FileToDownload = {
+  url: string;
+  filename: string;
+};
+
 interface PhotoGridProps {
   blocktones: Array<{ tokenId: string; video: string }>; // Updated to handle tokenId and video
   rowLimit: number;
@@ -21,44 +31,79 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
 
   const photoChunks = chunkArray(blocktones, columns).slice(0, rowLimit);
 
-  const downloadZip = async () => {
-    const zip = new JSZip();
+  const downloadZip = async (filesToDownload: FileToDownload[], tokenId: string) => {
+    try {
+      const zip = new JSZip();
 
-    // Define the URLs for the files you want to download
-    const filesToDownload = [
-      {
-        url: "https://blocktones1.s3.amazonaws.com/audio/20.wav",
-        filename: "20.wav",
-      },
-      {
-        url: "https://blocktones1.s3.amazonaws.com/2160p/210.mp4",
-        filename: "210.mp4",
-      },
-      {
-        url: "https://blocktones1.s3.amazonaws.com/stems/Alive-Again.wav",
-        filename: "Alive-Again.wav",
-      },
-    ];
-
-    // Add each file to the ZIP
-    for (const file of filesToDownload) {
-      try {
-        const response = await fetch(file.url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+      for (const file of filesToDownload) {
+        const response = await fetch(
+          `/api/proxy?url=${encodeURIComponent(file.url)}`
+        );
+        if (response.ok) {
+          const blob = await response.blob();
+          zip.file(file.filename, blob);
+        } else {
+          // console.error(`Failed to fetch file: ${file.filename}`);
         }
-        const blob = await response.blob();
-        zip.file(file.filename, blob);
-      } catch (error) {
-        console.error("Fetch error:", error);
       }
+
+      const content = await zip.generateAsync({ type: "blob" });
+      console.log("Download should be finished");
+      saveAs(content, `${tokenId}.zip`);
+    } catch (error) {
+      console.error("Error downloading files:", error);
     }
+  };
 
-    // Generate the ZIP file
-    const content = await zip.generateAsync({ type: "blob" });
+  const fetchStems = async (tokenId: string) => {
+    const url = `https://ipfs.io/ipfs/bafybeigtmbztn4v7fu5ya4d5qzsql6b7soacmm3gdd4gnxgt4v235am34q/${tokenId}.json`;
 
-    // Use the saveAs function from file-saver to trigger the download
-    saveAs(content, "blocktones-files.zip");
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch JSON data");
+      }
+
+      const data = await response.json();
+
+      // Process the attributes to create the file list
+      const fileList = generateFileList(data.attributes);
+
+      const additionalFiles = [
+        {
+          url: `https://blocktones1.s3.amazonaws.com/audio/${tokenId}.wav`,
+          filename: `${tokenId}.wav`,
+        },
+        {
+          url: `https://blocktones1.s3.amazonaws.com/album_art/${tokenId}.jpg`,
+          filename: `${tokenId}.jpg`,
+        },
+        {
+          url: `https://blocktones1.s3.amazonaws.com/2160p/${tokenId}.mp4`,
+          filename: `${tokenId}.mp4`,
+        },
+      ];
+
+      // Concatenate the additional files to the file list
+      const completeFileList = [...fileList, ...additionalFiles];
+
+      console.log(completeFileList);
+
+      // Optionally, trigger download for each file
+      await downloadZip(completeFileList, tokenId);
+    } catch (error) {
+      console.error("Error fetching JSON data:", error);
+    }
+  };
+
+  const generateFileList = (attributes: Attribute[]) => {
+    return attributes.map((attr) => {
+      const valueWithDashes = attr.value.replace(/\s+/g, "-"); // Replace spaces with dashes
+      return {
+        url: `https://blocktones1.s3.amazonaws.com/stems/${valueWithDashes}.wav`, // Construct the URL
+        filename: `${valueWithDashes}.wav`, // Construct the filename
+      };
+    });
   };
 
   return (
@@ -73,23 +118,28 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
               <video
                 className="md:mx-1 my-1 md:w-[260px] md:h-[240px]"
                 controls
-                // poster={nft.video}
                 poster={`https://blocktones1.s3.amazonaws.com/album_art/${nft.tokenId}.jpg`}
               >
                 <source src={nft.video} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
               <p>{nft.tokenId}</p> {/* Display tokenId */}
+              <button
+                className="bg-blue-500 text-white p-2 rounded mt-2"
+                onClick={() => fetchStems(nft.tokenId)}
+              >
+                Download
+              </button>
             </div>
           ))}
         </div>
       ))}
-      <button
+      {/* <button
         onClick={downloadZip}
         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
       >
         Download ZIP
-      </button>
+      </button> */}
     </div>
   );
 };
