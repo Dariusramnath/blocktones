@@ -5,7 +5,7 @@ import { cookieStorage, createStorage } from "wagmi";
 import { mainnet } from "viem/chains";
 
 // Get projectId at https://cloud.walletconnect.com
-export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
+export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID || "0xefaDc46BB78B01195a1E12C82A584Caf5403585C";;
 
 if (!projectId) throw new Error("Project ID is not defined");
 
