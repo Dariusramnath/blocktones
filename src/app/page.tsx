@@ -14,15 +14,6 @@ import { useWeb3Modal } from "@web3modal/wagmi/react";
 import PhotoGrid from "@/components/PhotoGrid";
 
 export default function Home() {
-  const photosArray = [
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-    "https://blocktones1.s3.amazonaws.com/1080p/1680.mp4",
-  ];
   const [blocktones, setBlocktones] = useState<
     Array<{ tokenId: string; video: string }>
   >([]);
@@ -43,14 +34,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (blocktones && blocktones.length > 0) {
-      blocktones.forEach((nft) => {
-        console.log(`Token ID: ${nft.tokenId}`);
-        console.log(`Video URL: ${nft.video}`);
-      });
-    } else {
-      console.log("No blocktones data available.");
-    }
     if (isConfirming) {
       toast.loading("Transaction Pending");
     }
@@ -106,13 +89,13 @@ export default function Home() {
   }, [isConnected]);
 
   return (
-    <main className="">
-      <div className="flex justify-center gap-6 border-2 border-red-500 items-center">
+    <main >
+      <div className="flex justify-center gap-6 items-center">
         {!isConnected ? (
           <h1 className="flex md:text-2xl min-h-screen items-center">Connect your wallet to display your NFTs!</h1>
         ) : (
           <div className="flex mt-4 md:ml-6">
-            <PhotoGrid blocktones={blocktones} rowLimit={5} />
+            <PhotoGrid blocktones={blocktones} rowLimit={5}/>
           </div>
         )}
       </div>

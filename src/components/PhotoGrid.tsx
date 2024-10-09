@@ -1,6 +1,7 @@
 import React from "react";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { toast } from "sonner";
 
 type Attribute = {
   trait_type: string;
@@ -31,8 +32,12 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
 
   const photoChunks = chunkArray(blocktones, columns).slice(0, rowLimit);
 
-  const downloadZip = async (filesToDownload: FileToDownload[], tokenId: string) => {
+  const downloadZip = async (
+    filesToDownload: FileToDownload[],
+    tokenId: string
+  ) => {
     try {
+      toast.loading("Retrieving Files ...");
       const zip = new JSZip();
 
       for (const file of filesToDownload) {
@@ -46,8 +51,12 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
           // console.error(`Failed to fetch file: ${file.filename}`);
         }
       }
-
+      toast.dismiss()
+      toast.loading("Zipping Files ...")
       const content = await zip.generateAsync({ type: "blob" });
+      toast.dismiss()
+      
+      toast.success("Download complete!")
       console.log("Download should be finished");
       saveAs(content, `${tokenId}.zip`);
     } catch (error) {
@@ -109,27 +118,57 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
   return (
     <div>
       {photoChunks.map((chunk, rowIndex) => (
-        <div
-          key={rowIndex}
-          className="flex md:flex-row flex-col mb-4  border-2 border-red-500"
-        >
+        <div key={rowIndex} className="flex md:flex-row flex-col mb-4">
           {chunk.map((nft, colIndex) => (
-            <div key={colIndex} className="mx-1">
+            <div key={colIndex} className="md:mx-1 mx-2 border-y border-gray-600 rounded-xl mb-4 md:mb-0">
               <video
-                className="md:mx-1 my-1 md:w-[260px] md:h-[240px]"
+                className="md:mx-1 mt-1 md:w-[260px] md:h-[240px]"
                 controls
                 poster={`https://blocktones1.s3.amazonaws.com/album_art/${nft.tokenId}.jpg`}
               >
                 <source src={nft.video} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
-              <p>{nft.tokenId}</p> {/* Display tokenId */}
-              <button
-                className="bg-blue-500 text-white p-2 rounded mt-2"
-                onClick={() => fetchStems(nft.tokenId)}
-              >
-                Download
-              </button>
+              <div className="mx-3 mb-1 flex flex-row items-end justify-between">
+                <p className="font-mono">Token # {nft.tokenId}</p>{" "}
+                {/* Display tokenId */}
+                <button
+                  className="bg-white text-white p-1 rounded mt-2"
+                  onClick={() => fetchStems(nft.tokenId)}
+                >
+                  <svg
+                    width="24px"
+                    height="24px"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                  >
+                    <g id="Complete">
+                      <g id="download">
+                        <path
+                          d="M3,12.3v7a2,2,0,0,0,2,2H19a2,2,0,0,0,2-2v-7"
+                          stroke="#000000"
+                        />
+                        <polyline
+                          points="7.9 12.3 12 16.3 16.1 12.3"
+                          stroke="#000000"
+                        />
+                        <line
+                          x1="12"
+                          y1="2.7"
+                          x2="12"
+                          y2="14.2"
+                          stroke="#000000"
+                        />
+                      </g>
+                    </g>
+                  </svg>
+                </button>
+              </div>
             </div>
           ))}
         </div>
