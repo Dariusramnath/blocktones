@@ -37,7 +37,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
     tokenId: string
   ) => {
     try {
-      toast.loading("Retrieving Files ...(This may take a while)");
+      toast.loading("Retrieving Files ...(This will take a while)");
       const zip = new JSZip();
 
       for (const file of filesToDownload) {
