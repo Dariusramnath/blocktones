@@ -37,7 +37,7 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
     tokenId: string
   ) => {
     try {
-      toast.loading("Retrieving Files ...");
+      toast.loading("Retrieving Files ...(This may take a while)");
       const zip = new JSZip();
 
       for (const file of filesToDownload) {
@@ -51,12 +51,12 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
           // console.error(`Failed to fetch file: ${file.filename}`);
         }
       }
-      toast.dismiss()
-      toast.loading("Zipping Files ...")
+      toast.dismiss();
+      toast.loading("Zipping Files ...");
       const content = await zip.generateAsync({ type: "blob" });
-      toast.dismiss()
-      
-      toast.success("Download complete!")
+      toast.dismiss();
+
+      toast.success("Download complete!");
       console.log("Download should be finished");
       saveAs(content, `${tokenId}.zip`);
     } catch (error) {
@@ -120,7 +120,10 @@ const PhotoGrid: React.FC<PhotoGridProps> = ({ blocktones, rowLimit }) => {
       {photoChunks.map((chunk, rowIndex) => (
         <div key={rowIndex} className="flex md:flex-row flex-col mb-4">
           {chunk.map((nft, colIndex) => (
-            <div key={colIndex} className="md:mx-1 mx-2 border-y border-gray-600 rounded-xl mb-4 md:mb-0">
+            <div
+              key={colIndex}
+              className="md:mx-1 mx-2 border-y border-gray-600 rounded-xl mb-4 md:mb-0"
+            >
               <video
                 className="md:mx-1 mt-1 md:w-[260px] md:h-[240px]"
                 controls
